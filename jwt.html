@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script type="module" src="https://online.tableau.com/javascripts/api/tableau.embedding.3.latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js" crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
+</head>
+
+<body>
+    <div id="dash" style="height:500%;width:500%"></div>
+
+    <script>
+        // Set input values directly as variables
+        const userid = "bpp@umy.ac.id";
+        const iss = "cfe1d8b5-3fe4-4f0e-b968-a25d841294d1";
+        const kid = "631bf8ee-0085-4e4f-9798-5204e399aeba";
+        const secret = "97sGUl5UI3AYQmO+BYgb6HH+9wcFwre7lpOb7hxwPps=";
+        const wurl = "https://prod-apsoutheast-b.online.tableau.com/t/bppumy/views/tes/Dashboard1?:origin=card_share_link&:embed=n";
+        const scopes = ["tableau:views:embed"];
+
+        var jwt;
+
+        document.addEventListener("DOMContentLoaded", function () {
+            // Check if there's a stored JWT and validate it
+            jwt = localStorage.getItem('jwt');
+            var expTime = localStorage.getItem('jwtExp');
+
+            if (!jwt || !expTime || Date.now() / 1000 > expTime) {
+                // Remove JWT if it is expired
+                localStorage.removeItem('jwt');
+                localStorage.removeItem('jwtExp');
+                generateAndDisplayJWT(); // Generate a new JWT if none exists or it's expired
+            } else {
+                displayDashboard(jwt);
+            }
+
+            // Set an interval to regenerate JWT every 10 minutes
+            setInterval(function () {
+                // Check expiration and remove JWT if expired
+                var currentTime = Date.now() / 1000;
+                if (currentTime > expTime - 60) { // 1 minute before expiration
+                    localStorage.removeItem('jwt');
+                    localStorage.removeItem('jwtExp');
+                    generateAndDisplayJWT();
+                }
+            }, 60000); // Check every minute
+        });
+
+        function generateAndDisplayJWT() {
+            // Create the JWT
+            jwt = createToken(userid, kid, secret, iss, scopes);
+            var exp = Math.round(new Date().getTime() / 1000) + 600; // 10 minutes expiry
+
+            // Store JWT and expiration time in local storage
+            localStorage.setItem('jwt', jwt);
+            localStorage.setItem('jwtExp', exp);
+
+            displayDashboard(jwt);
+        }
+
+        function displayDashboard(token) {
+            let tp = `
+      <tableau-viz id="tableauViz" src="${wurl}" 
+        token="${token}"
+        height="1000"
+        width="1000"
+        toolbar="Bottom" hide-tabs>
+      </tableau-viz>`;
+            document.getElementById('dash').innerHTML = tp;
+        }
+
+        function createToken(userid, kid, secret, iss, scp) {
+            var header = {
+                "alg": "HS256",
+                "typ": "JWT",
+                "iss": iss,
+                "kid": kid,
+            };
+            var stringifiedHeader = CryptoJS.enc.Utf8.parse(JSON.stringify(header));
+            var encodedHeader = base64url(stringifiedHeader);
+
+            var claimSet = {
+                "sub": userid,
+                "aud": "tableau",
+                "nbf": Math.round(new Date().getTime() / 1000) - 100,
+                "jti": new Date().getTime().toString(),
+                "iss": iss,
+                "scp": scp,
+                "exp": Math.round(new Date().getTime() / 1000) + 600 // 10 minutes expiry
+            };
+
+            var stringifiedData = CryptoJS.enc.Utf8.parse(JSON.stringify(claimSet));
+            var encodedData = base64url(stringifiedData);
+
+            var token = encodedHeader + "." + encodedData;
+            var signature = CryptoJS.HmacSHA256(token, secret);
+            signature = base64url(signature);
+
+            var signedToken = token + "." + signature;
+            return signedToken;
+        }
+
+        function base64url(source) {
+            var encodedSource = CryptoJS.enc.Base64.stringify(source);
+            encodedSource = encodedSource.replace(/=+$/, '');
+            encodedSource = encodedSource.replace(/\+/g, '-');
+            encodedSource = encodedSource.replace(/\//g, '_');
+            return encodedSource;
+        }
+    </script>
+</body>
+
+</html>
