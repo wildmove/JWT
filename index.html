@@ -5,10 +5,28 @@
     <script type="module" src="https://online.tableau.com/javascripts/api/tableau.embedding.3.latest.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js" crossorigin="anonymous"
         referrerpolicy="no-referrer"></script>
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        #dash {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 100vw;
+        }
+    </style>
 </head>
 
 <body>
-    <div id="dash" style="height:500%;width:500%"></div>
+    <div id="dash"></div>
 
     <script>
         // Set input values directly as variables
@@ -61,12 +79,11 @@
 
         function displayDashboard(token) {
             let tp = `
-      <tableau-viz id="tableauViz" src="${wurl}" 
-        token="${token}"
-        height="1000"
-        width="1000"
-        toolbar="Bottom" hide-tabs>
-      </tableau-viz>`;
+            <tableau-viz id="tableauViz" src="${wurl}" 
+                token="${token}"
+                style="height:100vh; width:100vw;"
+                toolbar="Bottom" hide-tabs>
+            </tableau-viz>`;
             document.getElementById('dash').innerHTML = tp;
         }
 
