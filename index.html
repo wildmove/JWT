@@ -68,7 +68,7 @@ const wurl = "https://prod-apsoutheast-b.online.tableau.com/t/bppumy/views/UMYSc
         function generateAndDisplayJWT() {
             // Create the JWT
             jwt = createToken(userid, kid, secret, iss, scopes);
-            var exp = Math.round(new Date().getTime() / 1000) + 600; // 10 minutes expiry
+            var exp = Math.round(new Date().getTime() / 1000) + 300; // 10 minutes expiry
 
             // Store JWT and expiration time in local storage
             localStorage.setItem('jwt', jwt);
